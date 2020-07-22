@@ -1,1 +1,9 @@
 /VDE web scraper/api_infos
+/VDE web scraper/api_infos.json
+/VDE web scraper/geckodriver.log
+/VDE web scraper/session_name.session
+/VDE web scraper/SVDEE.session
+/VDE web scraper/SVDEE.session-journal
+/VDE web scraper/temp_image
+/venv/
+/.idea/
