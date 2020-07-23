@@ -42,6 +42,10 @@ class VdeEvent:
         self.last_posting_time = None
 
 
+def datetime_dict_to_str(dt_dict):
+    return {key: dt_dict[key].strftime(datetime_format) for key in dt_dict.keys()}
+
+
 def strip_time(time_str_list):
     """
     Strips time from date or datetime string
@@ -62,6 +66,13 @@ def strip_time(time_str_list):
             time_str = time_str[:time_str.index('.') + 8]
             time_list.append(datetime.datetime.strptime(time_str, date_format))
     return time_list
+
+
+with open('last_scraping_time.json', 'rb') as time_read:
+    curr_last_times = json.load(time_read)
+
+
+curr_last_times = {key: strip_time(curr_last_times[key])[0]for key in curr_last_times.keys()}
 
 
 def prettify_string(string: str):
@@ -88,6 +99,7 @@ async def scrape_events(driver):
     :return:
     """
 
+    global curr_last_times
     channel = await client.get_entity('t.me/vdeyoungnet')  # getting the telegram channel
     events = {}
     while True:
@@ -107,7 +119,7 @@ async def scrape_events(driver):
         curr_time_w_offset = datetime.datetime.now() + datetime.timedelta(days=40)
 
         # only posting maximum every week
-        posting_offset = datetime.datetime.now() - datetime.timedelta(days=7)
+        # posting_offset = datetime.datetime.now() - datetime.timedelta(days=7)
 
         for event_raw in events_raw:
             event_url = event_raw.find_element_by_tag_name('a').get_attribute('href')
@@ -175,10 +187,10 @@ async def scrape_events(driver):
                 event.location = locations
                 event.description = prettify_string(
                     soup.find('div', {'id': 'beschreibung'}).get_text())
-
+            if event.event_url in curr_last_times:
+                continue
             # only post event if not been posted recently and event is coming up soon
-            if (None is event.last_posting_time or event.last_posting_time < posting_offset) \
-                    and event.start[0] <= curr_time_w_offset:
+            if (None is event.last_posting_time) and event.start[0] <= curr_time_w_offset: # or event.last_posting_time < posting_offset) \
                 message = f'[{event.title}]({event_url})\n'
                 for i in range(len(event.start)):
                     if len(event.start) > 1:
@@ -197,15 +209,18 @@ async def scrape_events(driver):
                 with open('temp_image', 'wb') as img_file:
                     img_file.write(image)
                 with open('temp_image', 'rb') as img_file:
-                    await client.send_message(entity=channel, message=f'[{event.title}]({event.event_url})\n',
-                                              file=img_file)
+                    pass
+                    #await client.send_message(entity=channel, message=f'[{event.title}]({event.event_url})\n',
+                    #                         file=img_file)
 
-                await client.send_message(entity=channel, message=message,
-                                          link_preview=True)  # , file=img_file) not usable right now, because text is limited elsewise
+                # await client.send_message(entity=channel, message=message,
+                #                           link_preview=True)  # , file=img_file) not usable right now, because text is limited elsewise
                 event.last_posting_time = datetime.datetime.now()
+                curr_last_times[event.event_url] = event.last_posting_time
+                with open('last_scraping_time.json', 'w') as time_write:
+                    json.dump(datetime_dict_to_str(curr_last_times), time_write)
 
             events[event.event_url] = event  # update or append event
-            break
 
         time.sleep(60 * 60 * 12)  # update all 12 hours
 
