@@ -1,6 +1,8 @@
 # vdeyn_event_scraper
 Scrapes the events of vde young net and pushes them to the telegram channel of the vde young net (<a href='https://t.me/vdeyoungnet'>t.me/vdeyoungnet</a>)
 
+## Linux installation
+
     sudo apt-get -y update
     sudo apt-get -y upgrade
 
@@ -27,7 +29,6 @@ install requirements via
 
     pip install -r requirements
     
-Linux:
 download geckodriver
 
     wget https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz
