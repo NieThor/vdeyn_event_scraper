@@ -3,3 +3,15 @@ Scrapes the events of vde young net and pushes them to the telegram channel of t
 
 ## TODOS 
 - [ ] requirement text and installation/usage directions
+
+install requirements via 
+
+    pip install -r requirements
+    
+download geckodriver
+
+    wget https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz
+    
+extract tar
+
+    tar -zxvf geckodriver-v0.26.0-linux64.tar.gz
