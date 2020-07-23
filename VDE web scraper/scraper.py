@@ -68,11 +68,13 @@ def strip_time(time_str_list):
     return time_list
 
 
-with open('last_scraping_time.json', 'rb') as time_read:
-    curr_last_times = json.load(time_read)
+try:
+    with open('last_scraping_time.json', 'rb') as time_read:
+        curr_last_times = json.load(time_read)
 
-
-curr_last_times = {key: strip_time(curr_last_times[key])[0]for key in curr_last_times.keys()}
+    curr_last_times = {key: strip_time(curr_last_times[key])[0] for key in curr_last_times.keys()}
+except FileNotFoundError:
+    curr_last_times = {}
 
 
 def prettify_string(string: str):
@@ -86,7 +88,7 @@ def prettify_string(string: str):
     lines = string.split('\n')
     for i in range(len(lines) - 1, -1, -1):
         lines[i] = lines[i].strip()
-        if lines[i] == '' or lines[i] == '\r': # remove empty lines
+        if lines[i] == '' or lines[i] == '\r':  # remove empty lines
             lines.pop(i)
     return '\n'.join(lines)
 
@@ -190,7 +192,8 @@ async def scrape_events(driver):
             if event.event_url in curr_last_times:
                 continue
             # only post event if not been posted recently and event is coming up soon
-            if (None is event.last_posting_time) and event.start[0] <= curr_time_w_offset: # or event.last_posting_time < posting_offset) \
+            if (None is event.last_posting_time) and event.start[
+                0] <= curr_time_w_offset:  # or event.last_posting_time < posting_offset) \
                 message = f'[{event.title}]({event_url})\n'
                 for i in range(len(event.start)):
                     if len(event.start) > 1:
@@ -210,11 +213,11 @@ async def scrape_events(driver):
                     img_file.write(image)
                 with open('temp_image', 'rb') as img_file:
                     pass
-                    #await client.send_message(entity=channel, message=f'[{event.title}]({event.event_url})\n',
-                    #                         file=img_file)
+                    await client.send_message(entity=channel, message=f'[{event.title}]({event.event_url})\n',
+                                              file=img_file)
 
-                # await client.send_message(entity=channel, message=message,
-                #                           link_preview=True)  # , file=img_file) not usable right now, because text is limited elsewise
+                await client.send_message(entity=channel, message=message,
+                                          link_preview=True)  # , file=img_file) not usable right now, because text is limited elsewise
                 event.last_posting_time = datetime.datetime.now()
                 curr_last_times[event.event_url] = event.last_posting_time
                 with open('last_scraping_time.json', 'w') as time_write:
