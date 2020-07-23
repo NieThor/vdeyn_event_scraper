@@ -5,6 +5,7 @@ install requirements via
 
     pip install -r requirements
     
+Linux:
 download geckodriver
 
     wget https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz
