@@ -16,3 +16,7 @@ extract tar
 install firefox
 
     sudo apt-get -y install firefox
+
+start scraper
+
+    python3 scraper_linux.py
