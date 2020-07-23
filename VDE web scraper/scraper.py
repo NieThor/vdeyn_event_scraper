@@ -3,7 +3,7 @@ import json
 from bs4 import BeautifulSoup
 import datetime
 import time
-
+import platform
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,6 +11,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
 import telethon
 import logging
+import pathlib
+PATH = pathlib.Path(__file__).parent.absolute()
 
 datetime_format = '%d.%m.%Y %H:%M'
 date_format = '%d.%m.%Y'
@@ -18,7 +20,7 @@ date_format = '%d.%m.%Y'
 base_url = 'https://www.vde.com/de/vde-youngnet/veranstaltungen'
 
 # read api information from json file
-with open('api_infos.json', 'rb') as api_codes:
+with open(f'{PATH}\\api_infos.json', 'rb') as api_codes:
     api_json = json.load(api_codes)
     api_id = int(api_json['api_id'])
     api_hash = api_json['api_hash']
@@ -231,7 +233,9 @@ async def scrape_events(driver):
 if __name__ == '__main__':
     options = Options()
     options.headless = True
-    web_driver = webdriver.Firefox(options=options, executable_path=r'geckodriver.exe')
+    gecko_path = f'{PATH}\\{"geckodriver" if platform.system() == "Linux" else "geckodriver.exe"}'
+    web_driver = webdriver.Firefox(options=options,
+                                   executable_path=gecko_path)
     with client:
         client.loop.run_until_complete(scrape_events(web_driver))
     web_driver.quit()
