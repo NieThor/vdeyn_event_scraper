@@ -146,8 +146,16 @@ async def scrape_events(driver):
                 if None is tbody:
                     tbody = table
                 rows = tbody.find_all('tr')
-                event.start = strip_time(rows[0].find_all('td')[1].get_text())
-                event.end = strip_time(rows[1].find_all('td')[1].get_text())
+                temp_tds = rows[0].find_all('td')
+                temp_start = temp_tds[1].get_text()
+                if len(temp_tds) > 2:
+                    temp_start += f' {temp_tds[2].get_text()}'
+                event.start = strip_time(temp_start)
+                temp_tds = rows[1].find_all('td')
+                temp_end = temp_tds[1].get_text()
+                if len(temp_tds) > 2:
+                    temp_end += f' {temp_tds[2].get_text()}'
+                event.end = strip_time(temp_end)
 
                 def find_location(tag):
                     return tag.name == 'div' and tag.has_attr('class') and 'row-1' in tag[
@@ -194,8 +202,7 @@ async def scrape_events(driver):
             if event.event_url in curr_last_times:
                 continue
             # only post event if not been posted recently and event is coming up soon
-            if (None is event.last_posting_time) and event.start[
-                0] <= curr_time_w_offset:  # or event.last_posting_time < posting_offset) \
+            if (None is event.last_posting_time) and event.start[0] <= curr_time_w_offset:  # or event.last_posting_time < posting_offset) \
                 message = f'[{event.title}]({event_url})\n'
                 for i in range(len(event.start)):
                     if len(event.start) > 1:
@@ -208,13 +215,13 @@ async def scrape_events(driver):
                                 and type(event.end[i]) is datetime.date
                                 and event.start[i].date() != event.end[i]):
                         message += f'Ende: {event.end[i].strftime(datetime_format if type(event.end[i]) is datetime.datetime else date_format)}\n'
+                    event.location[i] = event.location[i].replace('\n', ', ')
                     message += f'Ort: {event.location[i]}\n\n'
                 message += f'__Beschreibung:__\n{event.description}'
                 image = requests.get(event.img_url, stream=True).content
                 with open('temp_image', 'wb') as img_file:
                     img_file.write(image)
                 with open('temp_image', 'rb') as img_file:
-                    pass
                     await client.send_message(entity=channel, message=f'[{event.title}]({event.event_url})\n',
                                               file=img_file)
 
