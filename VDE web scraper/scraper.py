@@ -120,7 +120,7 @@ async def scrape_events(driver):
     """
 
     global curr_last_times
-    channel = await client.get_entity('@TN_freqtrade_14052020_bot')#t.me/vdeyoungnet')  # getting the telegram channel
+    channel = await client.get_entity('t.me/vdeyoungnet')  # getting the telegram channel
     events = {}
     i = 0
     while True:
