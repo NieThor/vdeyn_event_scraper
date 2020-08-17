@@ -102,11 +102,11 @@ def prettify_string_with_list(tag):
     ordered_lists = tag.find_all('ol')
     for u_list in unordered_lists:
         for li in u_list.find_all('li'):
-            li.string.replace_with(bullet + f' {li.string}')
+            li.string.replace_with(' ' + bullet + f' {li.string}')
 
     for o_list in ordered_lists:
         for i, li in enumerate(o_list.find_all('li')):
-            li.string.replace_with(str(i+1) + f'. {li.string}')
+            li.string.replace_with(' ' + str(i+1) + f'. {li.string}')
 
     return prettify_string(tag.get_text())
 
