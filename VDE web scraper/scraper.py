@@ -280,7 +280,7 @@ async def scrape_events(driver):
 if __name__ == '__main__':
     options = Options()
     options.headless = True
-    gecko_path = f'{PATH}\\{"geckodriver" if platform.system() == "Linux" else "geckodriver.exe"}'
+    gecko_path = f'{PATH}{"/geckodriver" if platform.system() == "Linux" else "\\geckodriver.exe"}'
     web_driver = webdriver.Firefox(options=options,
                                    executable_path=gecko_path)
     with client:
