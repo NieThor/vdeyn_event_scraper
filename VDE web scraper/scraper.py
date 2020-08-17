@@ -96,6 +96,21 @@ def prettify_string(string: str):
     return '\n'.join(lines)
 
 
+def prettify_string_with_list(tag):
+    bullet = '\u2022'
+    unordered_lists = tag.find_all('ul')
+    ordered_lists = tag.find_all('ol')
+    for u_list in unordered_lists:
+        for li in u_list.find_all('li'):
+            li.string.replace_with(bullet + f' {li.string}')
+
+    for o_list in ordered_lists:
+        for i, li in enumerate(o_list.find_all('li')):
+            li.string.replace_with(str(i+1) + f'. {li.string}')
+
+    return prettify_string(tag.get_text())
+
+
 async def scrape_events(driver):
     """
     Scrapes events from VDE Young Net webpage
@@ -189,7 +204,7 @@ async def scrape_events(driver):
                 if None is desc:
                     desc = soup.find(find_desc_2)
                 if None is not desc:
-                    event.description = prettify_string(desc.parent.find_all('div')[1].get_text())
+                    event.description = prettify_string_with_list(desc.parent.find_all('div')[1])
 
             elif 'vde-verlag.de' in event_url:  # some events are hosted on vde-verlag.de
 
@@ -256,7 +271,6 @@ async def scrape_events(driver):
                     json.dump(datetime_dict_to_str(curr_last_times), time_write)
 
             events[event.event_url] = event  # update or append event
-
 
 
 if __name__ == '__main__':
