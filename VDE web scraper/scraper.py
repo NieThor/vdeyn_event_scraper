@@ -42,6 +42,7 @@ class VdeEvent:
         self.img_url = None
         self.event_url = None
         self.last_posting_time = None
+        self.language = None
 
 
 def datetime_dict_to_str(dt_dict):
@@ -106,7 +107,14 @@ async def scrape_events(driver):
     global curr_last_times
     channel = await client.get_entity('t.me/vdeyoungnet')  # getting the telegram channel
     events = {}
+    i = 0
     while True:
+        if i != 0:
+            time.sleep(60 * 60)  # update every hour
+        i += 1
+        curr_hour = datetime.datetime.now().hour
+        if 21 < curr_hour or curr_hour < 9:  # no messages between 21:00 and 9:00
+            continue
         driver.get(base_url)
         wait = WebDriverWait(driver, 10)
 
@@ -157,25 +165,31 @@ async def scrape_events(driver):
                     temp_end += f' {temp_tds[2].get_text()}'
                 event.end = strip_time(temp_end)
 
-                def find_location(tag):
+                def find_by_str(tag, search_str):
                     return tag.name == 'div' and tag.has_attr('class') and 'row-1' in tag[
-                        'class'] and 'Veranstaltungsort' in tag.get_text()
+                        'class'] and search_str in tag.get_text()
 
+                def find_location(tag):
+                    return find_by_str(tag, 'Veranstaltungsort')
                 event.location = [prettify_string(
                     soup.find(find_location).parent.find_all('div')[1].find('p').get_text())]
 
+                def find_language(tag):
+                    return find_by_str(tag, 'Veranstaltungs-Sprache')
+
                 def find_desc(tag):
-                    return tag.name == 'div' and tag.has_attr('class') and 'row-1' in tag[
-                        'class'] and 'Beschreibung' in tag.get_text()
+                    return find_by_str(tag, 'Beschreibung')
 
                 def find_desc_2(tag):
-                    return tag.name == 'div' and tag.has_attr('class') and 'row-1' in tag[
-                        'class'] and 'Bemerkung' in tag.get_text()
+                    return find_by_str(tag, 'Bemerkung')
+
+                event.language = [soup.find(find_language).parent.find('img').get('title')]
 
                 desc = soup.find(find_desc)
                 if None is desc:
                     desc = soup.find(find_desc_2)
-                event.description = prettify_string(desc.parent.find_all('div')[1].get_text())
+                if None is not desc:
+                    event.description = prettify_string(desc.parent.find_all('div')[1].get_text())
 
             elif 'vde-verlag.de' in event_url:  # some events are hosted on vde-verlag.de
 
@@ -207,7 +221,7 @@ async def scrape_events(driver):
                 for i in range(len(event.start)):
                     if len(event.start) > 1:
                         message += f'{i + 1}. Termin\n'
-                    message += f'Beginn: {event.start[i].strftime(datetime_format if type(event.start[i]) is datetime.datetime else date_format)}\n'
+                    message += f'Beginn: {event.start[i].strftime(datetime_format) + " Uhr" if type(event.start[i]) is datetime.datetime else event.start[i].strftime(date_format)}\n'
                     if (type(event.start[i]) is datetime.date
                         and type(event.end[i]) is datetime.date
                         and event.start[i] != event.end[i]) \
@@ -215,13 +229,22 @@ async def scrape_events(driver):
                                 and type(event.end[i]) is datetime.date
                                 and event.start[i].date() != event.end[i]):
                         message += f'Ende: {event.end[i].strftime(datetime_format if type(event.end[i]) is datetime.datetime else date_format)}\n'
+                    if len(event.language) != 0:
+                        message += 'Sprache: '
+                        if 'de' in event.language[0]:
+                            message += "\U0001f1e9\U0001f1ea"
+                        else:
+                            message += "\U0001f1ec\U0001f1e7"
+                        message += '\n'
                     event.location[i] = event.location[i].replace('\n', ', ')
                     message += f'Ort: {event.location[i]}\n\n'
-                message += f'__Beschreibung:__\n{event.description}'
+                if None is not event.description:
+                    message += f'__Beschreibung:__\n{event.description}'
                 image = requests.get(event.img_url, stream=True).content
                 with open('temp_image', 'wb') as img_file:
                     img_file.write(image)
                 with open('temp_image', 'rb') as img_file:
+                    pass
                     await client.send_message(entity=channel, message=f'[{event.title}]({event.event_url})\n',
                                               file=img_file)
 
@@ -234,7 +257,6 @@ async def scrape_events(driver):
 
             events[event.event_url] = event  # update or append event
 
-        time.sleep(60 * 60 * 12)  # update all 12 hours
 
 
 if __name__ == '__main__':
