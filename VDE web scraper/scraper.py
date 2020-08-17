@@ -24,8 +24,9 @@ with open(f'{PATH}\\api_infos.json', 'rb') as api_codes:
     api_json = json.load(api_codes)
     api_id = int(api_json['api_id'])
     api_hash = api_json['api_hash']
+    bot_token = "add_token_here"
 logging.INFO = True
-client = telethon.TelegramClient('SVDEE', api_id, api_hash)
+client = telethon.TelegramClient('SVDEE', api_id, api_hash).start(bot_token=bot_token)
 
 
 class VdeEvent:
